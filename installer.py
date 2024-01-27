@@ -163,6 +163,13 @@ def perform_installation(mountpoint: Path):
 			'cockpit-pcp',
 			'cockpit-storaged',
 		])
+		installation.enable_service([
+			'nginx',
+			'mariadb',
+			'postgresql',
+			'cockpit',
+			'sshd',
+		])
 
 
 
@@ -218,6 +225,16 @@ def perform_installation(mountpoint: Path):
 
 		# If the user provided custom commands to be run post-installation, execute them now.
 		archinstall.run_custom_user_commands(install_paru, installation)
+		archinstall.run_custom_user_commands([
+			'mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql'
+		], installation)
+		for user in archinstall.arguments.get('!users', []):
+			archinstall.run_custom_user_commands([
+				f'usermod -a -G docker {user.username}'
+			], installation)
+		archinstall.run_custom_user_commands([
+			'sudo -u postgres initdb -D /var/lib/postgres/data'
+		], installation)
 		if archinstall.arguments.get('custom-commands', None):
 			archinstall.run_custom_user_commands(archinstall.arguments['custom-commands'], installation)
 
