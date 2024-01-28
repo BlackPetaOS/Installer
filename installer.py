@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -171,33 +172,16 @@ def perform_installation(mountpoint: Path):
 			'sshd',
 		])
 
-
-
-
-
-
-
-
 		installation.add_bootloader(archinstall.arguments["bootloader"])
 
-		# If user selected to copy the current ISO network configuration
-		# Perform a copy of the config
-		network_config = archinstall.arguments.get('network_config', None)
-
-		if network_config:
-			network_config.install_network_config(
-				installation,
-				archinstall.arguments.get('profile_config', None)
-			)
+		# Use ISO network configuration
+		installation.copy_iso_network_config()
 
 		if users := archinstall.arguments.get('!users', None):
 			installation.create_users(users)
 
 		if archinstall.arguments.get('packages', None) and archinstall.arguments.get('packages', None)[0] != '':
 			installation.add_additional_packages(archinstall.arguments.get('packages', []))
-
-		if profile_config := archinstall.arguments.get('profile_config', None):
-			profile.profile_handler.install_profile_config(installation, profile_config)
 
 		if timezone := archinstall.arguments.get('timezone', None):
 			installation.set_timezone(timezone)
@@ -214,9 +198,6 @@ def perform_installation(mountpoint: Path):
 		# This step must be after profile installs to allow profiles_bck to install language pre-requisites.
 		# After which, this step will set the language both for console and x11 if x11 was installed for instance.
 		installation.set_keyboard_language(locale_config.kb_layout)
-
-		if profile_config := archinstall.arguments.get('profile_config', None):
-			profile_config.profile.post_install(installation)
 
 		# If the user provided a list of services to be enabled, pass the list to the enable_service function.
 		# Note that while it's called enable_service, it can actually take a list of services and iterate it.
